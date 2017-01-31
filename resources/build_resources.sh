@@ -26,7 +26,7 @@ function build_qt {
 }
 
 function build_ui {
-    build_qt "pyside-uic --from-imports" "$1.ui" "$1"
+    build_qt "%ProgramFiles%\Shotgun\Python\python.exe" "%ProgramFiles%\Autodesk\Maya2016.5\bin\pyside-uic" "--from-imports" "$1.ui" "$1"
 }  
 
 function build_res {
