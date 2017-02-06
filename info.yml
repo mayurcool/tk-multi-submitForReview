@@ -13,6 +13,34 @@
 # expected fields in the configuration file for this engine
 configuration:
 
+    template_work:
+        type: template
+        required_fields: []
+        optional_fields: "*"
+        description: "Template defining the output location of the work in shots file on the artist local file system."
+    
+    template_review:
+        type: template
+        required_fields: []
+        optional_fields: "*"
+        description: "Template defining the output location of the review in shots file on the artist local file system."
+    
+    template_review_maya:
+        type: template
+        required_fields: []
+        optional_fields: "*"
+        description: "Template defining the primary output location of shot movie files on the main storage file system."
+
+    hook_pre_submission:
+        type: hook
+        default_value: pre_submission
+        description: "Specify a hook that will be used to check files for review"
+            
+    hook_post_submission:
+        type: hook
+        default_value: post_submission
+        description: "Specify a hook that will be executed after actual submission process"
+
 # this app works in all engines - it does not contain 
 # any host application specific commands
 supported_engines: 
