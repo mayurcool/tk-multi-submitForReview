@@ -9,8 +9,8 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import os
-import shutil
 import traceback
+import time
 
 import maya.cmds as cmds
 import pymel.core as pm
@@ -178,13 +178,13 @@ class PostPlayblast(Hook):
 
             with open(runme_temp_path, 'w') as runme:
                 if makeDir:
-                    runme.write('mkdir "%s" \n' % (review_dir))
+                    runme.write('mkdir "%s" \n' % (review_dir.replace('V:', '\\\\vg_server\Project')))
                 for src in data['review_images']:
                     runme.write('copy "%s" "%s" /Y \n' % (src, review_dir.replace('V:', '\\\\vg_server\Project')))
                 runme.write('copy "%s" "%s" /Y \n' % (review_file.replace('/', '\\'), review_dir.replace('V:', '\\\\vg_server\Project')))
 
             os.system("S:\\softwares\\shotgun\\studio\\admin.exe %s" % runme_temp_path)
-
+            time.sleep(3)
 
         except:
             os.remove(runme_temp_path)
