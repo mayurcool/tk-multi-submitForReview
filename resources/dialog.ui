@@ -36,18 +36,22 @@
       <string> Files To Review</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QLineEdit" name="lineEdit_2"/>
+      <item row="2" column="0" colspan="3">
+       <widget class="QListWidget" name="lw_FileList"/>
       </item>
-      <item row="0" column="1">
+      <item row="3" column="0">
        <widget class="QPushButton" name="pb_loadFiles">
         <property name="text">
-         <string>Load</string>
+         <string>Add Images</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0" colspan="2">
-       <widget class="QListWidget" name="lw_FileList"/>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="pb_delFiles">
+        <property name="text">
+         <string>Remove Images</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
