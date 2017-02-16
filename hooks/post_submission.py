@@ -37,54 +37,22 @@ class PostPlayblast(Hook):
                         upload_move         -> upload generated QT file to Shotgun
         """
         # get the application and it's shotgun instance
-        app=self.parent
+        app = self.parent
         sg = app.sgtk.shotgun
-        
+
+        print data
+
+
         if action == "copy_file":
             try:
-                # get all required template
-                template_work = app.get_template("template_work")
-                template_shot = app.get_template("template_shot")
-                template_sequence = app.get_template("template_sequence")
-                # use current scene name to create valid QT file names
-                scenename = pm.sceneName()
-                fields = template_work.get_fields(scenename)
-                destination = [template_shot.apply_fields(fields),template_sequence.apply_fields(fields)]
-                # make sure that destination folder is exists
-                for each in destination:
-                    if not os.path.exists(os.path.dirname(each)):
-                        os.makedirs(os.path.dirname(each))
-                # copy local file to destination
-                for each in destination:
-                    print (data, each)
-                    shutil.copy(data, each)
-            except Exception,e:
+
+                self.make_runme_batchfile(data)
+
+            except Exception, e:
                 print e
-                print "Error in copying mov file %s" % data
-            return True
-            
-            
-        elif action == "copy_maya_file":
-            try:
-                # get all required template
-                template_work = app.get_template("template_work")
-                template_shot = app.get_template("template_shot")
-                template_sequence = app.get_template("template_sequence")
-                # use current scene name to create valid QT file names
-                scenename = pm.sceneName()
-                fields = template_work.get_fields(scenename)
-                destination = [template_shot.apply_fields(fields),template_sequence.apply_fields(fields)]
-                # make sure that destination folder is exists
-                for each in destination:
-                    if not os.path.exists(os.path.dirname(each)):
-                        os.makedirs(os.path.dirname(each))
-                # copy local file to destination
-                for each in destination:
-                    print (data, each)
-                    shutil.copy(data, each)
-            except Exception,e:
-                print e
-                print "Error in copying mov file %s" % data
+                print "Error in copying data to review folder "
+                return False
+
             return True
 
         elif action == "create_version":
@@ -107,37 +75,56 @@ class PostPlayblast(Hook):
                 # check if a version entity with same code exists in shotgun
                 # if none, create a new version Entity with qtfile name as its code
                 result=None
-                # version = sg.find_one("Version", [["code", "is", data["code"]]])
-                # if version:
-                    # app.log_debug("Version already exist, updating")
-                    # result = sg.update('Version', version["id"], data)
-                # else:
+
                 app.log_debug("Create a new Version as %s" % data["code"])
+
                 result = sg.create('Version', data)
+
             except:
-                app.log_debug("Something wrong")
+                app.log_debugresult("Something wrong")
                 traceback.print_exc()
-            return result
+                return  False
+            return True
+
+
+        elif action == "log_time":
+            """
+                Setting up shotgun version entity without uploading the QT file
+            """
+            app.log_debug("Setting up shotgun time log entity...")
+
+            try:
+
+                result = None
+                app.log_debug("Create a new Time log for %s" % data["entity"])
+
+                result = sg.create("TimeLog", {"duration": data['duration'],
+                                                "entity": app.context.task,
+                                                "project": app.context.project})
+            except Exception, e:
+                print ("Something wrong failed to log time consumed\n")
+                print e
+                traceback.print_exc()
+                return False
+            return True
         
         elif action == "check_version":
             """ 
                 Setting up shotgun version entity without uploading the QT file
             """
             app.log_debug("checking up shotgun version entity...")
-            
+            result = False
             try:
                 filters = [ ["Project", "is", data["project"]],
                             ["code", "is", data["code"]],
                             ]
                 # check if a version entity with same code exists in shotgun
                 # if none, create a new version Entity with qtfile name as its code
-                result=False
                 version = sg.find_one("Version", [["code", "is", data["code"]]])
-                print version
                 if version:
                     app.log_debug("Version already exist")
-                    print ("Version already exist")
-                    return True 
+                    print ("Version already exist %s " % version)
+                    result = True
             except:
                 app.log_debug("Something wrong")
                 traceback.print_exc()
@@ -164,3 +151,43 @@ class PostPlayblast(Hook):
 
         else:
             app.log_debug("nothing to do")
+
+
+
+
+    def make_runme_batchfile(self,data):
+        """
+
+        :param data:
+        :return:
+        """
+
+        TIMESTAMP_FORMAT = "%Y_%m_%d_%H_%M_%S"
+
+        makeDir = False
+        now = datetime.now().strftime(TIMESTAMP_FORMAT)
+        runme_temp_path = os.environ['TEMP'] + '\\runme_' + now + '.bat'
+        review_dir = data['review_dir']
+        review_file = data['review_file']
+        try:
+            if not os.path.exists(review_dir):
+                makeDir = True
+
+            if os.path.exists(runme_temp_path):
+                os.remove(runme_temp_path)
+
+            with open(runme_temp_path, 'w') as runme:
+                if makeDir:
+                    runme.write('mkdir "%s" \n' % (review_dir))
+                for src in data['review_images']:
+                    runme.write('copy "%s" "%s" /Y \n' % (src, review_dir.replace('V:', '\\\\vg_server\Project')))
+                runme.write('copy "%s" "%s" /Y \n' % (review_file.replace('/', '\\'), review_dir.replace('V:', '\\\\vg_server\Project')))
+
+            os.system("S:\\softwares\\shotgun\\studio\\admin.exe %s" % runme_temp_path)
+
+
+        except:
+            os.remove(runme_temp_path)
+            return False
+
+        return runme_temp_path
