@@ -166,7 +166,6 @@ class AppDialog(QtGui.QWidget):
         review_data['notes'] = self.ui.te_notes.toPlainText()
         review_data['time_log'] = total_hours
 
-
         return shotgun_data, review_data, timelog_data
 
     def submitForReview(self):
@@ -189,3 +188,7 @@ class AppDialog(QtGui.QWidget):
                 if version_result:
                     timelog_result = self._app.execute_hook("hook_post_submission", action="log_time", data=timelog_data)
 
+                    result = QtGui.QMessageBox.information(None, u"Done!",
+                                                        "%s"
+                                                        "\n Submission Completed Successfully!" % sg_data['code'],
+                                                        QtGui.QMessageBox.Ok)
